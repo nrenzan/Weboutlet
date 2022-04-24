@@ -1,26 +1,26 @@
-import React, {useEffect, useRef } from "react";
-import CheckoutSteps from "./CheckoutSteps";
-import { useSelector, useDispatch } from "react-redux";
-import MetaData from "../../more/Metadata";
-import { Typography } from "@material-ui/core";
+import React, { useEffect, useRef } from 'react';
+import CheckoutSteps from './CheckoutSteps';
+import { useSelector, useDispatch } from 'react-redux';
+import MetaData from '../../more/Metadata';
+import { Typography } from '@material-ui/core';
 import {
   CardNumberElement,
   CardCvcElement,
   CardExpiryElement,
   useStripe,
-  useElements,
-} from "@stripe/react-stripe-js";
-import axios from "axios";
-import "./payment.css";
-import CreditCardIcon from "@material-ui/icons/CreditCard";
-import EventIcon from "@material-ui/icons/Event";
-import VpnKeyIcon from "@material-ui/icons/VpnKey";
-import { createOrder, clearErrors } from "../../actions/OrderAction";
+  useElements
+} from '@stripe/react-stripe-js';
+import axios from 'axios';
+import './payment.css';
+import CreditCardIcon from '@material-ui/icons/CreditCard';
+import EventIcon from '@material-ui/icons/Event';
+import VpnKeyIcon from '@material-ui/icons/VpnKey';
+import { createOrder, clearErrors } from '../../actions/OrderAction';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const Payment = ({ history }) => {
-  const orderInfo = JSON.parse(sessionStorage.getItem("orderInfo"));
+  const orderInfo = JSON.parse(sessionStorage.getItem('orderInfo'));
 
   const dispatch = useDispatch();
   const stripe = useStripe();
@@ -32,7 +32,7 @@ const Payment = ({ history }) => {
   const { error } = useSelector((state) => state.order);
 
   const paymentData = {
-    amount: Math.round(orderInfo.totalPrice * 100),
+    amount: Math.round(orderInfo.totalPrice * 100)
   };
 
   const order = {
@@ -40,7 +40,7 @@ const Payment = ({ history }) => {
     orderItems: cartItems,
     itemsPrice: orderInfo.subtotal,
     shippingPrice: orderInfo.shippingCharges,
-    totalPrice: orderInfo.totalPrice,
+    totalPrice: orderInfo.totalPrice
   };
 
   const submitHandler = async (e) => {
@@ -51,53 +51,55 @@ const Payment = ({ history }) => {
     try {
       const config = {
         headers: {
-          "Content-Type": "application/json",
-        },
+          'Content-Type': 'application/json'
+        }
       };
       const { data } = await axios.post(
-        "/api/v2/payment/process",
+        '/api/v2/payment/process',
         paymentData,
         config
       );
 
       const client_secret = data.client_secret;
+      dispatch(createOrder(order));
+      history.push('/success');
 
-      if (!stripe || !elements) return;
+      // if (!stripe || !elements) return;
 
-      const result = await stripe.confirmCardPayment(client_secret, {
-        payment_method: {
-          card: elements.getElement(CardNumberElement),
-          billing_details: {
-            name: user.name,
-            email: user.email,
-            address: {
-              line1: shippingInfo.address,
-              city: shippingInfo.city,
-              state: shippingInfo.state,
-              country: shippingInfo.country,
-            },
-          },
-        },
-      });
+      // const result = await stripe.confirmCardPayment(client_secret, {
+      //   payment_method: {
+      //     card: elements.getElement(CardNumberElement),
+      //     billing_details: {
+      //       name: user.name,
+      //       email: user.email,
+      //       address: {
+      //         line1: shippingInfo.address,
+      //         city: shippingInfo.city,
+      //         state: shippingInfo.state,
+      //         country: shippingInfo.country,
+      //       },
+      //     },
+      //   },
+      // });
 
-      if (result.error) {
-        payBtn.current.disabled = false;
+      // if (result.error) {
+      //   payBtn.current.disabled = false;
 
-        alert.error(result.error.message);
-      } else {
-        if (result.paymentIntent.status === "succeeded") {
-          order.paymentInfo = {
-            id: result.paymentIntent.id,
-            status: result.paymentIntent.status,
-          };
+      //   alert.error(result.error.message);
+      // } else {
+      //   if (result.paymentIntent.status === "succeeded") {
+      //     order.paymentInfo = {
+      //       id: result.paymentIntent.id,
+      //       status: result.paymentIntent.status,
+      //     };
 
-          dispatch(createOrder(order));
+      //     dispatch(createOrder(order));
 
-          history.push("/success");
-        } else {
-          toast.error("There's some issue while processing payment ");
-        }
-      }
+      //     history.push("/success");
+      //   } else {
+      //     toast.error("There's some issue while processing payment ");
+      //   }
+      // }
     } catch (error) {
       payBtn.current.disabled = false;
       alert.error(error.response.data.message);
@@ -120,15 +122,15 @@ const Payment = ({ history }) => {
           <Typography>Card Info</Typography>
           <div>
             <CreditCardIcon />
-            <CardNumberElement className="paymentInput" />
+            <input type="text" className="paymentInput" />
           </div>
           <div>
             <EventIcon />
-            <CardExpiryElement className="paymentInput" />
+            <input type="text" className="paymentInput" />
           </div>
           <div>
             <VpnKeyIcon />
-            <CardCvcElement className="paymentInput" />
+            <input type="text" className="paymentInput" />
           </div>
 
           <input
@@ -139,17 +141,17 @@ const Payment = ({ history }) => {
           />
         </form>
       </div>
-      <ToastContainer 
-       position="bottom-center"
-       autoClose={5000}
-       hideProgressBar={false}
-       newestOnTop={false}
-       closeOnClick
-       rtl={false}
-       pauseOnFocusLoss
-       draggable
-       pauseOnHover
-       />
+      <ToastContainer
+        position="bottom-center"
+        autoClose={5000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
     </>
   );
 };
